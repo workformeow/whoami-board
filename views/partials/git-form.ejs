@@ -1,0 +1,89 @@
+<div class="space-y-4">
+  <h3 class="font-semibold">ชื่อที่ใช้ commit (SourceTree ใช้ค่านี้)</h3>
+  <% if (!git.installed) { %>
+  <p class="text-red-600">ไม่พบคำสั่ง git ใน PATH</p>
+  <% } %>
+
+  <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+    <dt class="text-slate-500">global name</dt><dd class="break-all font-mono"><%= git.global.name || '(ยังไม่ได้ตั้ง)' %></dd>
+    <dt class="text-slate-500">global email</dt><dd class="break-all font-mono"><%= git.global.email || '(ยังไม่ได้ตั้ง)' %></dd>
+  </dl>
+
+  <form method="get" action="/" class="flex flex-wrap gap-2 text-sm">
+    <input name="repo" value="<%= repo %>" placeholder="path ของ repo เช่น D:\Src\Project\app" class="min-w-0 flex-1 rounded border px-2 py-1.5 dark:border-slate-600 dark:bg-slate-800" />
+    <button class="rounded border px-3 py-1.5 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800">ดู repo นี้</button>
+  </form>
+  <% if (git.repoError) { %>
+  <p class="text-sm text-red-600"><%= git.repoError %></p>
+  <% } %>
+  <% if (git.repo) { %>
+  <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+    <dt class="text-slate-500">repo name</dt><dd class="break-all font-mono"><%= git.repo.name %></dd>
+    <dt class="text-slate-500">repo email</dt><dd class="break-all font-mono"><%= git.repo.email %></dd>
+  </dl>
+  <% if (git.repo.overrides) { %>
+  <p class="text-sm text-amber-700 dark:text-amber-300">⚠️ repo นี้ตั้งค่าของตัวเองไว้ ซึ่งชนะค่า global</p>
+  <% } %>
+  <% if (git.repo.remote) { %>
+  <div class="rounded-lg border p-3 text-sm dark:border-slate-700">
+    <p class="text-slate-500">origin ของ repo นี้</p>
+    <p class="break-all font-mono"><%= git.repo.remote.url %></p>
+    <p class="mt-1 font-medium"><%= git.repo.remote.via %></p>
+  </div>
+  <% } %>
+  <% } %>
+
+  <form method="post" action="/git/identity" class="space-y-2 text-sm">
+    <input type="hidden" name="_csrf" value="<%= csrf %>" />
+    <input type="hidden" name="repo" value="<%= repo %>" />
+    <p class="font-medium">แก้ชื่อ commit</p>
+    <input name="name" required value="<%= git.global.name %>" placeholder="ชื่อ" class="w-full rounded border px-2 py-1.5 dark:border-slate-600 dark:bg-slate-800" />
+    <input name="email" type="email" required value="<%= git.global.email %>" placeholder="อีเมล" class="w-full rounded border px-2 py-1.5 dark:border-slate-600 dark:bg-slate-800" />
+    <div class="flex flex-wrap gap-4">
+      <label><input type="radio" name="scope" value="global" checked /> global (ทุก repo)</label>
+      <% if (git.repo) { %>
+      <label><input type="radio" name="scope" value="repo" /> เฉพาะ repo นี้</label>
+      <% } %>
+    </div>
+    <button class="rounded bg-blue-600 px-3 py-1.5 font-medium text-white hover:bg-blue-700">บันทึก</button>
+  </form>
+
+  <h3 class="pt-2 font-semibold">บัญชีที่ใช้ clone / pull / push</h3>
+  <p class="text-sm text-slate-600 dark:text-slate-400">ชื่อ commit ด้านบนไม่เกี่ยวกับสิทธิ์เข้า repo: สิทธิ์มาจากบัญชีด้านล่าง ขึ้นกับว่า remote เป็น HTTPS หรือ SSH</p>
+
+  <div class="rounded-lg border p-3 text-sm dark:border-slate-700">
+    <p class="font-medium">HTTPS (Credential Manager) · github.com</p>
+    <% git.httpsAccounts.forEach((a) => { %>
+    <p class="font-mono">🔑 <%= a %></p>
+    <% }) %>
+    <% if (git.httpsNote) { %>
+    <p class="mt-1 text-amber-700 dark:text-amber-300"><%= git.httpsNote %></p>
+    <% } %>
+  </div>
+
+  <div class="rounded-lg border p-3 text-sm dark:border-slate-700">
+    <p class="font-medium">SSH · host ใน ~/.ssh/config ที่ชี้ไป github.com</p>
+    <% git.ssh.forEach((s) => { %>
+    <p><code class="rounded bg-slate-100 px-1 dark:bg-slate-800"><%= s.host %></code> → <span class="font-mono"><%= s.account || '—' %></span> <span class="text-slate-500"><%= s.note %></span></p>
+    <% }) %>
+    <p class="mt-1 text-slate-500">remote แบบ <code>git@HOST:org/repo.git</code> ใช้บัญชีของ HOST นั้น · SourceTree ที่ตั้งให้ใช้ PuTTY/Pageant จะไม่แสดงตรงนี้</p>
+  </div>
+
+  <p class="text-sm">credential helper:
+    <% git.helpers.forEach((h) => { %><code class="mr-1 rounded bg-slate-100 px-1 dark:bg-slate-800"><%= h %></code><% }) %>
+  </p>
+  <% if (git.helperNote) { %>
+  <p class="text-sm text-slate-600 dark:text-slate-400"><%= git.helperNote %></p>
+  <% } %>
+  <% if (git.ghSetupGit) { %>
+  <p class="text-sm text-slate-600 dark:text-slate-400">ใช้ gh auth setup-git อยู่: push github.com ด้วยบัญชีของ GitHub CLI</p>
+  <% } %>
+  <p class="text-sm text-slate-600 dark:text-slate-400">SourceTree อาจใช้บัญชีจากหน้า Tools → Options → Authentication ของตัวเอง</p>
+  <form method="post" action="/git/forget" data-confirm="ลบ credentials ของ github.com? push ครั้งถัดไปจะถาม login ใหม่">
+    <input type="hidden" name="_csrf" value="<%= csrf %>" />
+    <input type="hidden" name="repo" value="<%= repo %>" />
+    <button class="rounded border border-red-500 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950">ลืม credentials ของ github.com</button>
+  </form>
+
+  <%- include('cleanup', { git }) %>
+</div>

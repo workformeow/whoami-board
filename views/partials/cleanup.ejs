@@ -1,0 +1,66 @@
+<details class="rounded-lg border p-3 text-sm dark:border-slate-700">
+  <summary class="cursor-pointer font-medium">🧹 ล้างบัญชี GitHub ที่เลิกใช้ (ทำเอง)</summary>
+  <div class="mt-3 space-y-4">
+    <p class="text-slate-600 dark:text-slate-400">หน้านี้แค่บอกวิธีและคำสั่ง <b>ไม่ได้ลบอะไรให้</b> ทำตามลำดับ แล้วกด รีเฟรช เพื่อดูว่าหายแล้ว · ลบเฉพาะของบัญชีที่เลิกใช้ อย่าลบของบัญชีตัวเอง</p>
+
+    <div class="space-y-1">
+      <p class="font-medium">1. บน GitHub (ทำก่อน ขณะยัง login บัญชีเก่าได้)</p>
+      <ul class="list-disc space-y-1 pl-5 text-slate-700 dark:text-slate-300">
+        <li>Settings → SSH and GPG keys → ลบ key ของเครื่องนี้</li>
+        <li>Settings → Applications → Authorized OAuth Apps → Revoke Sourcetree</li>
+        <li>Settings → Developer settings → Personal access tokens → ลบ token ที่ใช้ในเครื่องนี้</li>
+        <li>ถ้าเข้าบัญชีไม่ได้แล้ว: แจ้ง admin ของบริษัทให้ถอดออกจาก organization</li>
+      </ul>
+    </div>
+
+    <div class="space-y-1">
+      <p class="font-medium">2. SourceTree</p>
+      <ul class="list-disc space-y-1 pl-5 text-slate-700 dark:text-slate-300">
+        <li>Tools → Options → Authentication → เลือกบัญชีเก่า → Remove</li>
+        <li>รายการ repo: คลิกขวา bookmark ของบริษัท → Delete (ลบแค่ bookmark ไม่ลบไฟล์)</li>
+      </ul>
+    </div>
+
+    <div class="space-y-2">
+      <p class="font-medium">3. Credential Manager (HTTPS) · รายการที่เกี่ยวกับ GitHub</p>
+      <% if (git.githubCredentials.length === 0) { %>
+      <p class="text-slate-500">ไม่พบรายการ (หรือไม่ใช่ Windows: เปิด Keychain Access แล้วค้นคำว่า github)</p>
+      <% } %>
+      <% git.githubCredentials.forEach((c) => { %>
+      <div class="space-y-1 rounded bg-slate-100/60 p-2 dark:bg-slate-800/50">
+        <p><span class="font-mono"><%= c.user %></span> <span class="break-all text-xs text-slate-500"><%= c.target %></span></p>
+        <%- include('copy', { cmd: c.deleteCmd }) %>
+      </div>
+      <% }) %>
+      <p class="text-slate-500">หรือทำผ่านหน้าจอ: Control Panel → Credential Manager → Windows Credentials · "Personal Access Token" = ไม่รู้ว่าบัญชีไหน ลบได้ถ้าไม่แน่ใจ push ครั้งถัดไปจะถาม login ใหม่</p>
+    </div>
+
+    <div class="space-y-2">
+      <p class="font-medium">4. SSH key · host ใน ~/.ssh/config</p>
+      <% if (git.sshAliases.length === 0) { %>
+      <p class="text-slate-500">ไม่มี host แยกสำหรับ github.com</p>
+      <% } %>
+      <% git.sshAliases.forEach((s) => { %>
+      <div class="space-y-1 rounded bg-slate-100/60 p-2 dark:bg-slate-800/50">
+        <p><code><%= s.host %></code> → <span class="font-mono"><%= s.account || '—' %></span></p>
+        <p class="text-slate-600 dark:text-slate-400">ก. เปิดไฟล์ config แล้วลบบล็อก <code>Host <%= s.host %></code> (ถึงก่อน Host ถัดไป)</p>
+        <%- include('copy', { cmd: git.sshConfigEditCmd }) %>
+        <% if (s.removeCmd) { %>
+        <p class="text-slate-600 dark:text-slate-400">ข. ลบไฟล์ key (<%= s.identityFile %>)</p>
+        <%- include('copy', { cmd: s.removeCmd }) %>
+        <% } %>
+      </div>
+      <% }) %>
+    </div>
+
+    <div class="space-y-1">
+      <p class="font-medium">5. repo ของบริษัทในเครื่อง</p>
+      <p class="text-slate-700 dark:text-slate-300">ลบโฟลเดอร์เอง หรือเก็บไว้ตามนโยบายบริษัท · ใส่ path ด้านบน → "ดู repo นี้" เพื่อเช็ก origin ว่าเป็นของบริษัทไหม</p>
+    </div>
+
+    <div class="space-y-1">
+      <p class="font-medium">6. ตรวจ</p>
+      <p class="text-slate-700 dark:text-slate-300">กด รีเฟรช → host / รายการของบัญชีเก่าต้องหายไปจากข้อ 3–4 และ git commit เป็นชื่อ / email ของตัวเอง</p>
+    </div>
+  </div>
+</details>

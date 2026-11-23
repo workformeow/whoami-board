@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="csrf" content="<%= csrf %>" />
+    <title>whoami-board</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/app.js" defer></script>
+  </head>
+  <body class="bg-slate-100 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <main class="mx-auto max-w-4xl space-y-6 p-4">
+      <header class="flex items-center justify-between gap-3">
+        <div>
+          <h1 class="text-2xl font-bold">whoami-board</h1>
+          <p class="text-sm text-slate-500 dark:text-slate-400">เครื่องนี้ login อะไรไว้บ้าง · ตรวจล่าสุด <%= checkedAt %></p>
+        </div>
+        <a href="<%= refreshUrl %>" class="shrink-0 rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700">🔄 รีเฟรช</a>
+      </header>
+
+      <% if (flash) { %>
+      <div class="rounded-lg p-3 <%= flash.cls %>"><%= flash.text %></div>
+      <% } %>
+
+      <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">
+          <p class="text-sm text-slate-500 dark:text-slate-400">login อยู่</p>
+          <p class="text-3xl font-bold text-green-600 dark:text-green-400"><%= summary.ok %></p>
+        </div>
+        <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">
+          <p class="text-sm text-slate-500 dark:text-slate-400">ยังไม่ login</p>
+          <p class="text-3xl font-bold text-red-600 dark:text-red-400"><%= summary.off %></p>
+        </div>
+        <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">
+          <p class="text-sm text-slate-500 dark:text-slate-400">CLI ที่พบในเครื่อง</p>
+          <p class="text-3xl font-bold"><%= summary.installed %><span class="text-base font-normal text-slate-500"> / <%= summary.total %></span></p>
+        </div>
+        <div class="rounded-xl bg-white p-4 shadow-sm dark:bg-slate-900">
+          <p class="text-sm text-slate-500 dark:text-slate-400">git commit เป็น</p>
+          <p class="truncate pt-2 font-semibold"><%= git.global.name || '(ยังไม่ได้ตั้ง)' %></p>
+        </div>
+      </section>
+
+      <section class="overflow-hidden rounded-xl bg-white shadow-sm dark:bg-slate-900">
+        <h2 class="border-b px-4 py-3 font-semibold dark:border-slate-800">CLI ในเครื่องนี้</h2>
+        <ul class="divide-y dark:divide-slate-800">
+          <% installed.forEach((card) => { %>
+          <%- include('partials/row', { card }) %>
+          <% }) %>
+          <li>
+            <details class="group" id="tool-git" <%= repo ? 'open' : '' %>>
+              <summary class="flex cursor-pointer list-none items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 [&::-webkit-details-marker]:hidden">
+                <span class="h-2.5 w-2.5 shrink-0 rounded-full bg-blue-500"></span>
+                <div class="min-w-0 flex-1">
+                  <p class="font-medium">Git <span class="text-xs font-normal text-slate-500">ชื่อ commit / SourceTree</span></p>
+                  <p class="truncate font-mono text-sm text-slate-600 dark:text-slate-300"><%= git.global.email || '(ยังไม่ได้ตั้ง email)' %></p>
+                </div>
+                <span class="shrink-0 rounded-lg border px-3 py-1.5 text-sm dark:border-slate-700">
+                  <span class="group-open:hidden">ดู ▾</span><span class="hidden group-open:inline">ซ่อน ▴</span>
+                </span>
+              </summary>
+              <div class="border-t bg-slate-50 px-4 py-4 dark:border-slate-800 dark:bg-slate-950/40">
+                <%- include('partials/git-form', { git, csrf, repo }) %>
+              </div>
+            </details>
+          </li>
+        </ul>
+        <% if (installed.length === 0) { %>
+        <p class="px-4 py-3 text-sm text-slate-500">ไม่พบ CLI ที่รู้จักในเครื่องนี้</p>
+        <% } %>
+      </section>
+
+      <% if (missing.length) { %>
+      <details class="rounded-xl bg-white p-4 text-sm shadow-sm dark:bg-slate-900">
+        <summary class="cursor-pointer font-medium">ไม่ได้ติดตั้ง (<%= missing.length %>)</summary>
+        <ul class="mt-3 space-y-2">
+          <% missing.forEach((card) => { %>
+          <li class="flex flex-wrap items-baseline gap-x-2">
+            <span class="font-medium"><%= card.name %></span>
+            <code class="break-all text-xs text-slate-500 dark:text-slate-400"><%= card.installHint %></code>
+          </li>
+          <% }) %>
+        </ul>
+      </details>
+      <% } %>
+
+      <details class="rounded-xl bg-white p-4 text-sm shadow-sm dark:bg-slate-900">
+        <summary class="cursor-pointer font-medium">ควรรู้ก่อน login / logout</summary>
+        <ul class="mt-2 list-disc space-y-1 pl-5 text-slate-700 dark:text-slate-300">
+          <li>login บนเว็บไซต์ (เช่น vercel.com) <b>ไม่ใช่</b> การ login CLI ต้องรันคำสั่ง login ใน terminal เท่านั้น</li>
+          <li>login ครั้งเดียว ใช้ได้ทุก terminal ของ user นี้ (CMD, PowerShell, VS Code, AI agent)</li>
+          <li>ยกเว้น WSL, Dev Container, Remote SSH และ user อื่นของเครื่อง: แยกกันคนละชุด</li>
+          <li>หน้านี้รู้จักเฉพาะ CLI ในรายการ (<%= summary.total %> ตัว) และไม่เคยถามรหัสผ่านหรืออ่าน token</li>
+        </ul>
+      </details>
+    </main>
+  </body>
+</html>

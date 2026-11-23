@@ -1,0 +1,19 @@
+<div class="space-y-2 text-sm">
+  <p class="font-medium">วิธี login</p>
+  <div class="flex items-center gap-2">
+    <code class="flex-1 overflow-x-auto whitespace-nowrap rounded bg-slate-100 px-2 py-1 dark:bg-slate-800"><%= card.loginCmd %></code>
+    <button type="button" data-copy="<%= card.loginCmd %>" class="shrink-0 rounded border px-2 py-1 hover:bg-slate-100 dark:border-slate-600 dark:hover:bg-slate-800">คัดลอก</button>
+  </div>
+  <ol class="list-decimal space-y-1 pl-5 text-slate-700 dark:text-slate-300">
+    <% card.steps.forEach((s) => { %>
+    <li><%= s %></li>
+    <% }) %>
+  </ol>
+  <% if (card.canStartLogin) { %>
+  <button type="button" data-login="<%= card.id %>" class="rounded bg-green-600 px-3 py-1.5 font-medium text-white hover:bg-green-700">▶ เริ่ม login จากหน้านี้</button>
+  <div data-links="<%= card.id %>" class="space-y-1 break-all"></div>
+  <pre data-output="<%= card.id %>" class="hidden max-h-60 overflow-auto whitespace-pre-wrap break-all rounded bg-slate-900 p-2 text-xs text-slate-100"></pre>
+  <% } else { %>
+  <p class="text-slate-500 dark:text-slate-400"><%= card.loginNote %></p>
+  <% } %>
+</div>
